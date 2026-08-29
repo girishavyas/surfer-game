@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Subway Surfers: Urban Splash</title>
+  <!-- Google Fonts for authentic arcade styling -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Lilita+One&family=Fredoka:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-yellow: #ffd000;
+      --brand-orange: #ff5e00;
+      --brand-green: #22c55e;
+      --brand-cyan: #00d4ff;
+      --brand-pink: #ff0077;
+      --brand-blue: #2563eb;
+      --brand-dark: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Fredoka', 'Lilita One', system-ui, sans-serif;
+    }
+
+    body {
+      background: #020617;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 480px;
+      max-height: 880px;
+      background: #1e1b4b;
+      box-shadow: 0 0 50px rgba(0,0,0,0.9), 0 0 35px rgba(255, 94, 0, 0.3);
+      overflow: hidden;
+      border: 3px solid #334155;
+      border-radius: 12px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    
+    /* ---------------- HUD IN-GAME ---------------- */
+    .hud {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hud-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .badge {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 2px solid #ffffff;
+      padding: 6px 14px;
+      border-radius: 24px;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hud-score { color: #ffffff; text-shadow: 1px 1px 0 #000; }
+    .hud-coins { color: #ffd000; text-shadow: 1px 1px 0 #000; }
+    .hud-keys { color: #00d4ff; text-shadow: 1px 1px 0 #000; }
+    .hud-high { color: #c084fc; font-size: 0.78rem; }
+    
+    #powerup-container {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 4px;
+    }
+    .power-tag {
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 16px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 2px solid #ffffff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      animation: pulse 0.9s infinite alternate;
+    }
+    @keyframes pulse { from { opacity: 0.85; } to { opacity: 1; transform: scale(1.02); } }
+
+    /* ---------------- SUBWAY SURFERS MENU OVERLAY ---------------- */
+    .ss-menu {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(14, 165, 233, 0.4) 0%, rgba(2, 6, 23, 0.92) 80%);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 16px 24px 16px;
+      z-index: 20;
+    }
+
+    /* Top Currencies Bar */
+    .menu-top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: auto;
+    }
+    .pill-currency {
+      background: linear-gradient(180deg, #1e293b, #0f172a);
+      border: 2px solid #ffffff;
+      border-radius: 30px;
+      padding: 5px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: white;
+      font-weight: 800;
+      font-size: 1rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    .pill-icon {
+      font-size: 1.2rem;
+    }
+
+    /* Graffiti Subway Logo */
+    .logo-container {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: rotate(-3deg);
+    }
+    .logo-subway {
+      font-family: 'Titan One', cursive;
+      font-size: 3.2rem;
+      line-height: 0.95;
+      text-transform: uppercase;
+      color: var(--brand-yellow);
+      -webkit-text-stroke: 3px #000000;
+      text-shadow: 4px 6px 0px var(--brand-orange), 7px 9px 0px #000;
+      letter-spacing: 1px;
+    }
+    .logo-surfers {
+      font-family: 'Titan One', cursive;
+      font-size: 2.8rem;
+      line-height: 0.95;
+      text-transform: uppercase;
+      color: #ffffff;
+      -webkit-text-stroke: 3px #000000;
+      text-shadow: 4px 6px 0px var(--brand-pink), 7px 9px 0px #000;
+      letter-spacing: 1px;
+      margin-top: -4px;
+    }
+    .location-tag {
+      background: var(--brand-green);
+      color: #ffffff;
+      padding: 3px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 900;
+      border: 2px solid #000;
+      transform: rotate(4deg);
+      box-shadow: 2px 3px 0 #000;
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    /* Side Action Icons (Subway Surfers Style) */
+    .side-tray {
+      position: absolute;
+      left: 14px;
+      top: 36%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .side-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #38bdf8, #0284c7);
+      border: 3px solid #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.6);
+      cursor: pointer;
+      color: #fff;
+      font-weight: 800;
+      transition: transform 0.15s;
+    }
+    .side-btn:active {
+      transform: scale(0.92);
+    }
+    .side-btn span {
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      margin-top: -2px;
+    }
+
+    /* Center Play/Tap To Start CTA */
+    .cta-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .play-btn-huge {
+      background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+      border: 4px solid #ffffff;
+      border-radius: 50px;
+      padding: 16px 54px;
+      font-family: 'Titan One', cursive;
+      font-size: 1.9rem;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 8px 25px rgba(22, 163, 74, 0.6), inset 0 4px 0 rgba(255,255,255,0.7), 0 5px 0 #0f5132;
+      cursor: pointer;
+      text-shadow: 2px 2px 0px #000;
+      animation: pulse-btn 1.4s infinite alternate;
+      transition: transform 0.1s;
+    }
+    .play-btn-huge:active {
+      transform: scale(0.95);
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.6), inset 0 2px 0 rgba(255,255,255,0.7);
+    }
+    @keyframes pulse-btn {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.06); }
+    }
+
+    .tap-subtext {
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.88rem;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.3);
+      padding: 4px 12px;
+      border-radius: 12px;
+    }
+
+    /* Bottom Subway Navigation Tray */
+    .menu-bottom-tray {
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.9);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 8px 6px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-item.active {
+      color: var(--brand-yellow);
+      transform: translateY(-2px);
+    }
+    .nav-icon {
+      font-size: 1.3rem;
+    }
+
+    /* Game Over Modal (Subway Surfers Theme) */
+    .game-over-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 12, 28, 0.94);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      text-align: center;
+      z-index: 25;
+    }
+    .go-title {
+      font-family: 'Titan One', cursive;
+      font-size: 3rem;
+      color: #ef4444;
+      text-shadow: 3px 4px 0 #000, 5px 6px 0 var(--brand-orange);
+      -webkit-text-stroke: 2px #000;
+      margin-bottom: 12px;
+    }
+    .score-card-surfer {
+      background: #1e293b;
+      border: 3px solid #ffffff;
+      border-radius: 20px;
+      padding: 16px 28px;
+      width: 85%;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      margin-bottom: 20px;
+      color: white;
+    }
+    .score-card-surfer h3 {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .score-card-surfer .big-num {
+      font-family: 'Titan One', cursive;
+      font-size: 2.2rem;
+      color: var(--brand-yellow);
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .btn-action {
+      border: 3px solid #ffffff;
+      border-radius: 30px;
+      padding: 12px 36px;
+      font-family: 'Titan One', cursive;
+      font-size: 1.2rem;
+      color: white;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+      margin: 6px;
+      transition: transform 0.1s;
+    }
+    .btn-action:active {
+      transform: scale(0.95);
+    }
+    .btn-revive-ss {
+      background: linear-gradient(180deg, #00d4ff, #0284c7);
+    }
+    .btn-restart-ss {
+      background: linear-gradient(180deg, #ff5e00, #ea580c);
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    
+    <!-- IN-GAME HUD -->
+    <div class="hud">
+      <div class="hud-col">
+        <div class="badge hud-score">SCORE: <span id="ui-score">0</span></div>
+        <div class="badge hud-high">HIGH: <span id="ui-high">0</span></div>
+        <div id="powerup-container"></div>
+      </div>
+      <div class="hud-col" style="align-items: flex-end;">
+        <div class="badge hud-coins">🪙 <span id="ui-coins">0</span></div>
+        <div class="badge hud-keys">🔑 <span id="ui-keys">0</span></div>
+      </div>
+    </div>
+
+    <!-- SUBWAY SURFERS AESTHETIC FRONT MENU -->
+    <div class="ss-menu" id="start-menu">
+      
+      <!-- Top Currency Readout -->
+      <div class="menu-top-bar">
+        <div class="pill-currency">
+          <span class="pill-icon">🪙</span>
+          <span id="menu-coins">0</span>
+        </div>
+        <div class="pill-currency">
+          <span class="pill-icon">🔑</span>
+          <span id="menu-keys">3</span>
+        </div>
+      </div>
+
+      <!-- Graffiti Logo & World Tour City Tag -->
+      <div class="logo-container">
+        <div class="logo-subway">SUBWAY</div>
+        <div class="logo-surfers">SURFERS</div>
+        <div class="location-tag">★ TOKYO EDITION ★</div>
+      </div>
+
+      <!-- Left Side Arcade Action Buttons -->
+      <div class="side-tray">
+        <div class="side-btn" id="btn-boosters">
+          🚀
+          <span>Shop</span>
+        </div>
+        <div class="side-btn" id="btn-characters">
+          🧢
+          <span>Crew</span>
+        </div>
+        <div class="side-btn" id="btn-gifts">
+          🎁
+          <span>Gifts</span>
+        </div>
+      </div>
+
+      <!-- Center Big Play Button CTA -->
+      <div class="cta-container">
+        <button class="play-btn-huge" id="start-btn">TAP TO PLAY</button>
+        <div class="tap-subtext">SWIPE TO SURF • COLLECT GIFTS &amp; KEYS</div>
+      </div>
+
+      <!-- Bottom Nav Tray -->
+      <div class="menu-bottom-tray">
+        <div class="nav-item active">
+          <span class="nav-icon">🏃</span>
+          <span>RUN</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">🛹</span>
+          <span>BOARDS</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">🏆</span>
+          <span>AWARDS</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>SETTINGS</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- GAME OVER / BUSTED MENU -->
+    <div class="game-over-modal hidden" id="game-over-menu">
+      <div class="go-title">BUSTED!</div>
+      
+      <div class="score-card-surfer">
+        <h3>Score</h3>
+        <div class="big-num" id="go-score">0</div>
+        <div style="margin-top: 8px; font-size: 0.9rem; color: #94a3b8;">
+          Coins: <b style="color: #ffd000;" id="go-coins">0</b> | Keys: <b style="color: #00d4ff;" id="go-keys">0</b>
+        </div>
+      </div>
+
+      <button class="btn-action btn-revive-ss" id="revive-btn">SAVE ME (1 🔑)</button>
+      <button class="btn-action btn-restart-ss" id="restart-btn">PLAY AGAIN</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. SYNTH SOUND EFFECTS ENGINE (Web Audio API)
+       ========================================================================== */
+    let audioCtx = null;
+    let bgmStep = 0;
+    let bgmTimer = null;
+    let noiseBuffer = null;
+
+    function initAudio() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          createNoiseBuffer();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!bgmTimer) startBGM();
+      } catch(e) {}
+    }
+
+    function createNoiseBuffer() {
+      if (!audioCtx) return;
+      const bufferSize = audioCtx.sampleRate;
+      noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+    }
+
+    function playNoise(duration, filterFreq, type = 'lowpass', vol = 0.1) {
+      if (!audioCtx || !noiseBuffer) return;
+      try {
+        const whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = type;
+        filter.frequency.setValueAtTime(filterFreq, audioCtx.currentTime);
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        whiteNoise.start();
+        whiteNoise.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+
+    let coinPitchStep = 0;
+    let lastCoinTime = 0;
+
+    const Sound = {
+      dodge: () => {
+        if (!audioCtx) return;
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(360, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(140, audioCtx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.1);
+        } catch(e) {}
+      },
+      jump: () => {
+        if (!audioCtx) return;
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(680, audioCtx.currentTime + 0.18);
+          gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.18);
+        } catch(e) {}
+      },
+      slide: () => playNoise(0.24, 1300, 'bandpass', 0.16),
+      step: () => {
+        if (!audioCtx) return;
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(95, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.04);
+          gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.04);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.04);
+        } catch(e) {}
+      },
+      coin: () => {
+        if (!audioCtx) return;
+        const now = performance.now();
+        coinPitchStep = (now - lastCoinTime < 280) ? (coinPitchStep + 1) % 5 : 0;
+        lastCoinTime = now;
+        const scale = [987.77, 1174.66, 1318.51, 1567.98, 1975.53];
+        const freq = scale[coinPitchStep];
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.35, audioCtx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.09);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.09);
+        } catch(e) {}
+      },
+      key: () => {
+        if (!audioCtx) return;
+        [880, 1174, 1760, 2093].forEach((f, i) => {
+          setTimeout(() => {
+            try {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+              gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start();
+              osc.stop(audioCtx.currentTime + 0.15);
+            } catch(e) {}
+          }, i * 60);
+        });
+      },
+      gift: () => {
+        if (!audioCtx) return;
+        [523, 659, 783, 1046, 1318].forEach((f, i) => {
+          setTimeout(() => {
+            try {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+              gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start();
+              osc.stop(audioCtx.currentTime + 0.2);
+            } catch(e) {}
+          }, i * 50);
+        });
+      },
+      powerup: () => {
+        if (!audioCtx) return;
+        [523, 659, 783, 1046].forEach((f, i) => {
+          setTimeout(() => {
+            try {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'square';
+              osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+              gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start();
+              osc.stop(audioCtx.currentTime + 0.12);
+            } catch(e) {}
+          }, i * 55);
+        });
+      },
+      shieldBreak: () => playNoise(0.3, 1800, 'bandpass', 0.22),
+      crash: () => {
+        if (!audioCtx) return;
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.4);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.4);
+        } catch(e) {}
+        playNoise(0.45, 600, 'lowpass', 0.25);
+      }
+    };
+
+    function startBGM() {
+      const bassNotes = [65.41, 65.41, 77.78, 87.31, 65.41, 98.00, 87.31, 77.78];
+      bgmTimer = setInterval(() => {
+        if (!isRunning || !audioCtx) return;
+        const freq = bassNotes[bgmStep % bassNotes.length];
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.15);
+        } catch(e) {}
+        if (bgmStep % 2 === 1) playNoise(0.03, 7000, 'highpass', 0.02);
+        bgmStep++;
+      }, 160);
+    }
+
+    /* ==========================================================================
+       2. CANVAS SETUP & PROJECTION
+       ========================================================================== */
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const container = document.getElementById("game-container");
+
+    function resize() {
+      canvas.width = container.clientWidth || 360;
+      canvas.height = container.clientHeight || 640;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const HORIZON_Y = 0.30;
+    const CAM_DEPTH = 320;
+
+    function project(lane, z, yOffset = 0) {
+      const hY = canvas.height * HORIZON_Y;
+      const scale = CAM_DEPTH / (CAM_DEPTH + z);
+      const centerX = canvas.width / 2;
+      const spread = canvas.width * 0.48;
+
+      const screenX = centerX + (lane * spread * scale);
+      const screenY = hY + ((canvas.height - hY) * scale) - (yOffset * scale);
+      return { x: screenX, y: screenY, scale };
+    }
+
+    /* ==========================================================================
+       3. GAME STATE & BALANCED SPAWNER
+       ========================================================================== */
+    let isRunning = false;
+    let score = 0;
+    let coins = 0;
+    let keys = 3;
+    let highScore = 0;
+
+    try {
+      highScore = parseInt(localStorage.getItem('ss_high'), 10) || 0;
+      const savedKeys = localStorage.getItem('ss_keys');
+      keys = savedKeys !== null ? parseInt(savedKeys, 10) : 3;
+      const savedCoins = localStorage.getItem('ss_coins');
+      coins = savedCoins !== null ? parseInt(savedCoins, 10) : 0;
+    } catch(e) {
+      highScore = 0;
+      keys = 3;
+      coins = 0;
+    }
+
+    let speed = 480;
+    let distance = 0;
+    let screenShake = 0;
+    let globalTime = 0;
+    let lastStepTime = 0;
+    let invincibleTimer = 0;
+
+    const player = {
+      lane: 0,
+      currentX: 0,
+      y: 0,
+      vy: 0,
+      isJumping: false,
+      isDucking: false,
+      duckTimer: 0,
+      runAnim: 0,
+      width: 46,
+      height: 76
+    };
+
+    const powerups = {
+      magnet: 0,
+      jetpack: 0,
+      multiplier: 0,
+      sneakers: 0,
+      shield: 0
+    };
+
+    let obstacles = [];
+    let coinItems = [];
+    let keyItems = [];
+    let giftItems = [];
+    let powerupItems = [];
+    let scenery = [];
+    let particles = [];
+    let popups = [];
+
+    function spawnScenery(z) {
+      scenery.push({ z, type: 'arch' });
+    }
+
+    function spawnWave(zDist) {
+      if (Math.random() < 0.14) {
+        const lane = Math.floor(Math.random() * 3) - 1;
+        giftItems.push({ lane, z: zDist, y: 25 });
+      }
+
+      if (Math.random() < 0.12) {
+        const lane = Math.floor(Math.random() * 3) - 1;
+        keyItems.push({ lane, z: zDist + 40, y: 30, rot: 0 });
+      }
+
+      if (Math.random() < 0.20 && powerups.jetpack <= 0) {
+        const pTypes = ['magnet', 'jetpack', 'multiplier', 'sneakers', 'shield'];
+        const chosen = pTypes[Math.floor(Math.random() * pTypes.length)];
+        const lane = Math.floor(Math.random() * 3) - 1;
+        powerupItems.push({ lane, z: zDist, type: chosen });
+        return;
+      }
+
+      if (powerups.jetpack > 0) {
+        const lane = Math.floor(Math.random() * 3) - 1;
+        for (let i = 0; i < 4; i++) {
+          coinItems.push({ lane, z: zDist + (i * 70), y: 150, collected: false });
+        }
+        return;
+      }
+
+      const blockedLane = Math.floor(Math.random() * 3) - 1;
+      const type = Math.floor(Math.random() * 3);
+      obstacles.push({ lane: blockedLane, z: zDist, type });
+
+      for (let l = -1; l <= 1; l++) {
+        if (l !== blockedLane && Math.random() > 0.3) {
+          for (let i = 0; i < 3; i++) {
+            coinItems.push({ lane: l, z: zDist + (i * 75), y: 20, collected: false });
+          }
+        }
+      }
+    }
+
+    /* ==========================================================================
+       4. CONTROLS
+       ========================================================================== */
+    function moveLeft() { 
+      if (player.lane > -1) { player.lane--; Sound.dodge(); }
+    }
+    function moveRight() { 
+      if (player.lane < 1) { player.lane++; Sound.dodge(); }
+    }
+    function triggerJump() {
+      if (!player.isJumping && powerups.jetpack <= 0) {
+        player.vy = powerups.sneakers > 0 ? 940 : 800;
+        player.isJumping = true;
+        player.isDucking = false;
+        Sound.jump();
+      }
+    }
+    function triggerDuck() {
+      if (powerups.jetpack > 0) return;
+      if (player.isJumping) {
+        player.vy = -750;
+        Sound.slide();
+      } else {
+        player.isDucking = true;
+        player.duckTimer = 0.7;
+        Sound.slide();
+      }
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (!isRunning) return;
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") moveLeft();
+      if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") moveRight();
+      if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") triggerJump();
+      if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") triggerDuck();
+    });
+
+    let touchStartX = 0, touchStartY = 0;
+    window.addEventListener("touchstart", (e) => {
+      if (!e.changedTouches || !e.changedTouches[0]) return;
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    window.addEventListener("touchend", (e) => {
+      if (!isRunning || !e.changedTouches || !e.changedTouches[0]) return;
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      const dy = e.changedTouches[0].screenY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > 25) (dx > 0) ? moveRight() : moveLeft();
+      } else {
+        if (Math.abs(dy) > 25) (dy > 0) ? triggerDuck() : triggerJump();
+      }
+    }, { passive: true });
+
+    function emitSparks(x, y, color, count = 10) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 260,
+          vy: (Math.random() - 0.5) * 260,
+          alpha: 1,
+          color,
+          size: Math.random() * 3.5 + 2
+        });
+      }
+    }
+
+    function addScorePopup(text, x, y, color = "#ffd000") {
+      popups.push({ text, x, y, alpha: 1, color });
+    }
+
+    /* ==========================================================================
+       5. GAME LOOP & ENGINE
+       ========================================================================== */
+    let lastTime = performance.now();
+    let nextSpawnZ = 800;
+    let nextSceneryZ = 500;
+
+    function resetGame(keepStats = false) {
+      score = keepStats ? score : 0;
+      speed = keepStats ? Math.max(480, speed * 0.9) : 480;
+      distance = keepStats ? distance : 0;
+      nextSpawnZ = 800;
+      nextSceneryZ = 500;
+      screenShake = 0;
+      invincibleTimer = keepStats ? 2.5 : 0;
+      obstacles = [];
+      coinItems = [];
+      keyItems = [];
+      giftItems = [];
+      powerupItems = [];
+      scenery = [];
+      particles = [];
+      popups = [];
+      if (!keepStats) {
+        powerups.magnet = 0;
+        powerups.jetpack = 0;
+        powerups.multiplier = 0;
+        powerups.sneakers = 0;
+        powerups.shield = 15;
+      }
+      player.lane = 0;
+      player.currentX = 0;
+      player.y = 0;
+      player.vy = 0;
+      player.isJumping = false;
+      player.isDucking = false;
+      updateUI();
+    }
+
+    function update(dt) {
+      globalTime += dt;
+      const mult = powerups.multiplier > 0 ? 2 : 1;
+      distance += speed * dt;
+      score += Math.floor(speed * 0.015 * mult);
+      
+      if (speed < 720) speed += 1.8 * dt;
+
+      if (screenShake > 0) screenShake -= dt * 2.5;
+      if (invincibleTimer > 0) invincibleTimer -= dt;
+
+      for (let k in powerups) {
+        if (powerups[k] > 0) {
+          powerups[k] -= dt;
+          if (powerups[k] <= 0) powerups[k] = 0;
+        }
+      }
+
+      player.currentX += (player.lane - player.currentX) * 16 * dt;
+      player.runAnim += dt * (speed / 36);
+
+      if (!player.isJumping && !player.isDucking && powerups.jetpack <= 0) {
+        if (globalTime - lastStepTime > 0.26) {
+          Sound.step();
+          lastStepTime = globalTime;
+        }
+      }
+
+      if (powerups.jetpack > 0) {
+        player.y += (160 - player.y) * 6 * dt;
+        player.isJumping = false;
+        const pPt = project(player.currentX, 0, player.y);
+        emitSparks(pPt.x + (Math.random() - 0.5) * 15, pPt.y + 15, '#ff5e00', 1);
+      } else {
+        if (player.isJumping) {
+          player.y += player.vy * dt;
+          player.vy -= 1650 * dt;
+          if (player.y <= 0) {
+            player.y = 0;
+            player.vy = 0;
+            player.isJumping = false;
+            Sound.step();
+          }
+        }
+      }
+
+      if (player.isDucking) {
+        player.duckTimer -= dt;
+        if (player.duckTimer <= 0) player.isDucking = false;
+      }
+
+      while (nextSceneryZ < distance + 2500) {
+        spawnScenery(nextSceneryZ - distance);
+        nextSceneryZ += 450;
+      }
+      while (nextSpawnZ < distance + 2500) {
+        spawnWave(nextSpawnZ - distance);
+        nextSpawnZ += 620 + Math.random() * 120;
+      }
+
+      // Obstacles
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.z -= speed * dt;
+
+        if (powerups.jetpack <= 0 && invincibleTimer <= 0 && obs.z > -10 && obs.z < 45) {
+          if (Math.abs(player.currentX - obs.lane) < 0.44) {
+            let hit = false;
+            if (obs.type === 0 && player.y < 40) hit = true;
+            else if (obs.type === 1 && !player.isDucking) hit = true;
+            else if (obs.type === 2) hit = true;
+
+            if (hit) {
+              if (powerups.shield > 0) {
+                powerups.shield = 0;
+                invincibleTimer = 1.8;
+                screenShake = 0.5;
+                Sound.shieldBreak();
+                const pt = project(player.currentX, 0, player.y);
+                emitSparks(pt.x, pt.y, '#00d4ff', 25);
+                addScorePopup("SHIELD SAVED YOU! 🛡️", pt.x, pt.y, '#00d4ff');
+                obstacles.splice(i, 1);
+                continue;
+              } else {
+                triggerCrash();
+                return;
+              }
+            }
+          }
+        }
+        if (obs.z < -100) obstacles.splice(i, 1);
+      }
+
+      // Coins
+      for (let i = coinItems.length - 1; i >= 0; i--) {
+        const c = coinItems[i];
+        c.z -= speed * dt;
+
+        if (powerups.magnet > 0 && c.z < 600 && !c.collected) {
+          c.lane += (player.currentX - c.lane) * 12 * dt;
+          c.y += (player.y - c.y) * 12 * dt;
+        }
+
+        if (!c.collected && c.z > -25 && c.z < 60) {
+          if (Math.abs(player.currentX - c.lane) < 0.70 && Math.abs(player.y - c.y) < 60) {
+            c.collected = true;
+            coins += (powerups.multiplier > 0 ? 2 : 1);
+            Sound.coin();
+            const pt = project(c.lane, c.z, c.y);
+            emitSparks(pt.x, pt.y, '#ffd000', 6);
+            addScorePopup(powerups.multiplier > 0 ? "+2" : "+1", pt.x, pt.y);
+          }
+        }
+        if (c.z < -100) coinItems.splice(i, 1);
+      }
+
+      // Keys
+      for (let i = keyItems.length - 1; i >= 0; i--) {
+        const k = keyItems[i];
+        k.z -= speed * dt;
+        k.rot += dt * 3.5;
+
+        if (k.z > -25 && k.z < 60 && Math.abs(player.currentX - k.lane) < 0.7) {
+          keys++;
+          try { localStorage.setItem('ss_keys', keys); } catch(e) {}
+          Sound.key();
+          const pt = project(k.lane, k.z, k.y);
+          emitSparks(pt.x, pt.y, '#00d4ff', 20);
+          addScorePopup("+1 KEY 🔑", pt.x, pt.y, '#00d4ff');
+          keyItems.splice(i, 1);
+        } else if (k.z < -100) {
+          keyItems.splice(i, 1);
+        }
+      }
+
+      // Gifts
+      for (let i = giftItems.length - 1; i >= 0; i--) {
+        const g = giftItems[i];
+        g.z -= speed * dt;
+
+        if (g.z > -25 && g.z < 60 && Math.abs(player.currentX - g.lane) < 0.7) {
+          Sound.gift();
+          const pt = project(g.lane, g.z, g.y);
+          emitSparks(pt.x, pt.y, '#ff0077', 30);
+          
+          if (Math.random() > 0.3) {
+            const rewardCoins = 20;
+            coins += rewardCoins;
+            addScorePopup(`+${rewardCoins} COINS! 🎁`, pt.x, pt.y, '#ff0077');
+          } else {
+            powerups.shield = 15;
+            addScorePopup("SHIELD! 🛡️", pt.x, pt.y, '#00d4ff');
+          }
+          giftItems.splice(i, 1);
+        } else if (g.z < -100) {
+          giftItems.splice(i, 1);
+        }
+      }
+
+      // Powerups
+      for (let i = powerupItems.length - 1; i >= 0; i--) {
+        const p = powerupItems[i];
+        p.z -= speed * dt;
+
+        if (p.z > -25 && p.z < 60 && Math.abs(player.currentX - p.lane) < 0.7) {
+          powerups[p.type] = 12;
+          Sound.powerup();
+          const pt = project(p.lane, p.z, 20);
+          emitSparks(pt.x, pt.y, '#a855f7', 16);
+          addScorePopup(p.type.toUpperCase() + "!", pt.x, pt.y, '#38bdf8');
+          powerupItems.splice(i, 1);
+        } else if (p.z < -100) {
+          powerupItems.splice(i, 1);
+        }
+      }
+
+      for (let i = scenery.length - 1; i >= 0; i--) {
+        scenery[i].z -= speed * dt;
+        if (scenery[i].z < -150) scenery.splice(i, 1);
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.alpha -= 2 * dt;
+        if (p.alpha <= 0) particles.splice(i, 1);
+      }
+      for (let i = popups.length - 1; i >= 0; i--) {
+        const pop = popups[i];
+        pop.y -= 40 * dt;
+        pop.alpha -= 1.2 * dt;
+        if (pop.alpha <= 0) popups.splice(i, 1);
+      }
+
+      updateUI();
+    }
+
+    /* ==========================================================================
+       6. SURFERS TRACK & COLORFUL ASSET RENDERING
+       ========================================================================== */
+
+    function drawObstacle(obs) {
+      const pt = project(obs.lane, obs.z, 0);
+      const scale = pt.scale;
+
+      // Track floor warning decal
+      const decalW = 86 * scale;
+      const decalH = 26 * scale;
+      const pulseAlpha = 0.35 + Math.sin(globalTime * 8) * 0.2;
+
+      ctx.save();
+      ctx.fillStyle = obs.type === 0 ? `rgba(255, 208, 0, ${pulseAlpha})` : 
+                      obs.type === 1 ? `rgba(37, 99, 235, ${pulseAlpha})` : 
+                      `rgba(255, 94, 0, ${pulseAlpha})`;
+      ctx.beginPath();
+      ctx.ellipse(pt.x, pt.y + 4 * scale, decalW / 2, decalH / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2 * scale;
+      ctx.stroke();
+      ctx.restore();
+
+      if (obs.type === 0) {
+        // --- 1. JUMP BARRICADE (Subway Yellow Construction Wooden Barrier) ---
+        const w = 88 * scale;
+        const h = 46 * scale;
+        const postW = 9 * scale;
+
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(pt.x - w / 2, pt.y - h, postW, h);
+        ctx.fillRect(pt.x + w / 2 - postW, pt.y - h, postW, h);
+        ctx.strokeStyle = "#ffd000";
+        ctx.lineWidth = 2 * scale;
+        ctx.strokeRect(pt.x - w / 2, pt.y - h, postW, h);
+        ctx.strokeRect(pt.x + w / 2 - postW, pt.y - h, postW, h);
+
+        const strobe = Math.sin(globalTime * 14) > 0 ? 1 : 0.25;
+        ctx.fillStyle = `rgba(255, 208, 0, ${strobe})`;
+        ctx.beginPath();
+        ctx.arc(pt.x - w / 2 + postW / 2, pt.y - h - 5 * scale, 5.5 * scale, 0, Math.PI * 2);
+        ctx.arc(pt.x + w / 2 - postW / 2, pt.y - h - 5 * scale, 5.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        const beamH = 20 * scale;
+        const beamY = pt.y - h + 6 * scale;
+        ctx.fillStyle = "#ffd000";
+        ctx.fillRect(pt.x - w / 2, beamY, w, beamH);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(pt.x - w / 2, beamY, w, beamH);
+        ctx.clip();
+        ctx.fillStyle = "#1e293b";
+        for (let sx = -w; sx < w * 2; sx += 18 * scale) {
+          ctx.beginPath();
+          ctx.moveTo(pt.x - w / 2 + sx, beamY);
+          ctx.lineTo(pt.x - w / 2 + sx + 10 * scale, beamY);
+          ctx.lineTo(pt.x - w / 2 + sx - 2 * scale, beamY + beamH);
+          ctx.lineTo(pt.x - w / 2 + sx - 12 * scale, beamY + beamH);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2.5 * scale;
+        ctx.strokeRect(pt.x - w / 2, beamY, w, beamH);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `900 ${Math.max(9, 13 * scale)}px 'Titan One', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.shadowColor = "#000000";
+        ctx.shadowBlur = 4;
+        ctx.fillText("▲ JUMP ▲", pt.x, beamY + beamH * 0.72);
+        ctx.shadowBlur = 0;
+
+      } else if (obs.type === 1) {
+        // --- 2. SLIDE ARCHWAY (Subway Overhead Iron Truss) ---
+        const w = 96 * scale;
+        const totalH = 96 * scale;
+        const clearanceH = 48 * scale;
+        const trussH = totalH - clearanceH;
+
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(pt.x - w / 2, pt.y - totalH, 8 * scale, totalH);
+        ctx.fillRect(pt.x + w / 2 - 8 * scale, pt.y - totalH, 8 * scale, totalH);
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 2 * scale;
+        ctx.strokeRect(pt.x - w / 2, pt.y - totalH, 8 * scale, totalH);
+        ctx.strokeRect(pt.x + w / 2 - 8 * scale, pt.y - totalH, 8 * scale, totalH);
+
+        const signY = pt.y - totalH;
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(pt.x - w / 2 + 2, signY + 2, w - 4, trussH);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2.5 * scale;
+        ctx.strokeRect(pt.x - w / 2 + 2, signY + 2, w - 4, trussH);
+
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = `900 ${Math.max(10, 14 * scale)}px 'Titan One', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.shadowColor = "#38bdf8";
+        ctx.shadowBlur = 5;
+        ctx.fillText("▼ SLIDE ▼", pt.x, signY + trussH * 0.72);
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = "#ffd000";
+        ctx.fillRect(pt.x - w / 2, pt.y - clearanceH - 6 * scale, w, 6 * scale);
+
+      } else {
+        // --- 3. SUBWAY TRAIN CAR (Classic Red/White/Blue Metro) ---
+        const w = 88 * scale;
+        const h = 120 * scale;
+        const trainZDepth = 135;
+        const pBack = project(obs.lane, obs.z + trainZDepth, 0);
+        const wBack = 88 * pBack.scale;
+        const hBack = 120 * pBack.scale;
+
+        // Roof
+        ctx.fillStyle = "#cbd5e1";
+        ctx.beginPath();
+        ctx.moveTo(pt.x - w / 2, pt.y - h);
+        ctx.lineTo(pt.x + w / 2, pt.y - h);
+        ctx.lineTo(pBack.x + wBack / 2, pBack.y - hBack);
+        ctx.lineTo(pBack.x - wBack / 2, pBack.y - hBack);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#94a3b8";
+        ctx.lineWidth = 2 * scale;
+        ctx.stroke();
+
+        // Front Face (Red Subway Style)
+        const trainGrad = ctx.createLinearGradient(0, pt.y - h, 0, pt.y);
+        trainGrad.addColorStop(0, "#ef4444");
+        trainGrad.addColorStop(1, "#991b1b");
+        ctx.fillStyle = trainGrad;
+        ctx.fillRect(pt.x - w / 2, pt.y - h, w, h);
+
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 3 * scale;
+        ctx.strokeRect(pt.x - w / 2, pt.y - h, w, h);
+
+        // Train Windows
+        const winW = w * 0.78;
+        const winH = h * 0.28;
+        const winY = pt.y - h * 0.90;
+        ctx.fillStyle = "#0284c7";
+        ctx.fillRect(pt.x - winW / 2, winY, winW, winH);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2 * scale;
+        ctx.strokeRect(pt.x - winW / 2, winY, winW, winH);
+
+        // Train Front Warning Badge
+        ctx.fillStyle = "#ffd000";
+        ctx.font = `900 ${Math.max(8, 12 * scale)}px 'Titan One', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText("SUBWAY", pt.x, winY + winH * 0.65);
+
+        // Dual Headlights
+        const hlY = pt.y - h * 0.24;
+        const hlR = 6.5 * scale;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(pt.x - w * 0.3, hlY, hlR, 0, Math.PI * 2);
+        ctx.arc(pt.x + w * 0.3, hlY, hlR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Light Cones
+        ctx.fillStyle = "rgba(255, 208, 0, 0.2)";
+        ctx.beginPath();
+        ctx.moveTo(pt.x - w * 0.3, hlY);
+        ctx.lineTo(pt.x - w * 0.85, pt.y + 45 * scale);
+        ctx.lineTo(pt.x - w * 0.1, pt.y + 45 * scale);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(pt.x + w * 0.3, hlY);
+        ctx.lineTo(pt.x + w * 0.1, pt.y + 45 * scale);
+        ctx.lineTo(pt.x + w * 0.85, pt.y + 45 * scale);
+        ctx.fill();
+      }
+    }
+
+    // Draw Iconic "Jake" Style Character Runner
+    function drawRunner() {
+      const pPt = project(player.currentX, 0, player.y);
+      const scale = pPt.scale;
+      const x = pPt.x;
+      const y = pPt.y;
+
+      const leanAngle = (player.lane - player.currentX) * 0.35;
+      const anim = player.runAnim;
+      const legSwing = player.isJumping ? 0.7 : Math.sin(anim);
+      const armSwing = player.isJumping ? 0.8 : Math.cos(anim);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(leanAngle);
+
+      if (invincibleTimer > 0 && Math.floor(globalTime * 15) % 2 === 0) {
+        ctx.globalAlpha = 0.4;
+      }
+
+      const sW = (player.isDucking ? 46 : 34) * scale;
+      ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, sW, 7.5 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Subway Surfers Palette (Jake: White hoodie, Blue Jeans, Red Cap)
+      const skinTone = "#fcd34d";
+      const hoodieColor = powerups.jetpack > 0 ? "#ff5e00" : (powerups.multiplier > 0 ? "#c084fc" : "#ffffff");
+      const vestColor = "#2563eb";
+      const pantsColor = "#1e3a8a";
+      const capColor = "#ef4444";
+      const shoeColor = powerups.sneakers > 0 ? "#ff0077" : "#ef4444";
+
+      if (player.isDucking) {
+        const slideL = 48 * scale;
+        const slideH = 24 * scale;
+
+        if (Math.random() > 0.35) emitSparks(x + (Math.random() - 0.5) * 20, y - 2, '#ffd000', 2);
+
+        ctx.fillStyle = hoodieColor;
+        ctx.fillRect(-slideL / 2, -slideH, slideL, slideH);
+
+        ctx.fillStyle = skinTone;
+        ctx.beginPath();
+        ctx.arc(-slideL * 0.35, -slideH * 0.85, 9.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = capColor;
+        ctx.beginPath();
+        ctx.arc(-slideL * 0.35, -slideH * 0.95, 9.5 * scale, Math.PI * 0.8, Math.PI * 2.2);
+        ctx.fill();
+
+        ctx.fillStyle = pantsColor;
+        ctx.fillRect(slideL * 0.2, -slideH * 0.75, 14 * scale, 8 * scale);
+        ctx.fillStyle = shoeColor;
+        ctx.fillRect(slideL * 0.42, -slideH * 0.75, 9 * scale, 9 * scale);
+
+      } else {
+        const bodyH = player.height * scale;
+        const hipY = -bodyH * 0.44;
+        const shoulderY = -bodyH * 0.80;
+        const headY = -bodyH * 0.94;
+        const bounceY = player.isJumping ? 0 : Math.abs(Math.sin(anim)) * 5 * scale;
+
+        // Legs
+        const drawLeg = (side, swing) => {
+          const legW = 6.5 * scale;
+          const hipX = side * 7.5 * scale;
+          const kneeY = hipY + 15 * scale + bounceY;
+          const footY = -3 * scale + (side === 1 ? -swing * 12 * scale : swing * 12 * scale);
+          const footX = hipX + swing * 8.5 * scale;
+
+          ctx.strokeStyle = pantsColor;
+          ctx.lineWidth = legW;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(hipX, hipY + bounceY);
+          ctx.lineTo(footX, kneeY);
+          ctx.lineTo(footX, footY);
+          ctx.stroke();
+
+          ctx.fillStyle = shoeColor;
+          ctx.fillRect(footX - 4.5 * scale, footY - 4 * scale, 13 * scale, 6.5 * scale);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(footX - 4.5 * scale, footY - 1 * scale, 13 * scale, 2.5 * scale);
+        };
+
+        drawLeg(-1, legSwing);
+        drawLeg(1, legSwing);
+
+        // Torso
+        const torsoW = 21 * scale;
+        const torsoH = (shoulderY - hipY);
+        ctx.fillStyle = hoodieColor;
+        ctx.beginPath();
+        ctx.roundRect(-torsoW / 2, hipY + bounceY, torsoW, torsoH, 4.5 * scale);
+        ctx.fill();
+
+        // Denim Vest Overlay
+        ctx.fillStyle = vestColor;
+        ctx.fillRect(-torsoW / 2, hipY + bounceY + 2 * scale, torsoW * 0.3, torsoH - 2 * scale);
+        ctx.fillRect(torsoW / 2 - torsoW * 0.3, hipY + bounceY + 2 * scale, torsoW * 0.3, torsoH - 2 * scale);
+
+        // Arms
+        const drawArm = (side, swing) => {
+          const armW = 5 * scale;
+          const sX = side * (torsoW / 2 + 1);
+          const handY = shoulderY + 16 * scale + bounceY + (side * swing * 12 * scale);
+          const handX = sX + (side * 4 * scale);
+
+          ctx.strokeStyle = hoodieColor;
+          ctx.lineWidth = armW;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(sX, shoulderY + 4 * scale + bounceY);
+          ctx.lineTo(handX, handY);
+          ctx.stroke();
+
+          ctx.fillStyle = skinTone;
+          ctx.beginPath();
+          ctx.arc(handX, handY, 3.8 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        };
+
+        drawArm(-1, armSwing);
+        drawArm(1, armSwing);
+
+        // Head & Backward Red Cap
+        const headR = 9.5 * scale;
+        ctx.fillStyle = skinTone;
+        ctx.beginPath();
+        ctx.arc(0, headY + bounceY, headR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = capColor;
+        ctx.beginPath();
+        ctx.arc(0, headY - 2 * scale + bounceY, headR * 1.05, Math.PI * 0.9, Math.PI * 2.1);
+        ctx.fill();
+        // Backward Visor
+        ctx.fillRect(-headR * 1.1, headY - 3 * scale + bounceY, headR * 0.6, 4 * scale);
+
+        if (powerups.shield > 0) {
+          ctx.strokeStyle = `rgba(0, 212, 255, ${0.6 + Math.sin(globalTime * 10) * 0.3})`;
+          ctx.lineWidth = 3 * scale;
+          ctx.beginPath();
+          ctx.arc(0, shoulderY + bounceY + 15 * scale, 38 * scale, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       7. SCENE RENDERER
+       ========================================================================== */
+    function render() {
+      ctx.save();
+      
+      if (screenShake > 0) {
+        const s = screenShake * 12;
+        ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const hY = canvas.height * HORIZON_Y;
+
+      // 1. Vibrant City Skyline Gradient (Subway Sunset Aesthetic)
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, hY);
+      skyGrad.addColorStop(0, "#0284c7");
+      skyGrad.addColorStop(0.5, "#38bdf8");
+      skyGrad.addColorStop(1, "#fdba74");
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvas.width, hY);
+
+      // Colorful Skyline Silhouette
+      ctx.fillStyle = "#334155";
+      for (let i = 0; i < canvas.width; i += 36) {
+        ctx.fillRect(i, hY - 30 - ((i * 7) % 35), 26, 40);
+      }
+
+      // 2. Track Ground
+      const roadGrad = ctx.createLinearGradient(0, hY, 0, canvas.height);
+      roadGrad.addColorStop(0, "#64748b");
+      roadGrad.addColorStop(1, "#334155");
+      ctx.fillStyle = roadGrad;
+      ctx.fillRect(0, hY, canvas.width, canvas.height - hY);
+
+      // Wooden Railroad Ties
+      const tieOffset = (distance % 110);
+      for (let z = 2400 - tieOffset; z > 0; z -= 110) {
+        const p1 = project(-1.5, z);
+        const p2 = project(1.5, z);
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 4 * p1.scale;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+
+      // Steel Rails (Silver Polish)
+      [-1.5, -0.5, 0.5, 1.5].forEach(laneEdge => {
+        const pFar = project(laneEdge, 2400);
+        const pNear = project(laneEdge, 0);
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(pFar.x, pFar.y);
+        ctx.lineTo(pNear.x, pNear.y);
+        ctx.stroke();
+      });
+
+      // 3. Render 3D Objects Far to Near
+      const renderables = [
+        ...scenery.map(s => ({ ...s, kind: 'scenery' })),
+        ...obstacles.map(o => ({ ...o, kind: 'obs' })),
+        ...coinItems.filter(c => !c.collected).map(c => ({ ...c, kind: 'coin' })),
+        ...keyItems.map(k => ({ ...k, kind: 'key' })),
+        ...giftItems.map(g => ({ ...g, kind: 'gift' })),
+        ...powerupItems.map(p => ({ ...p, kind: 'powerup' }))
+      ].sort((a, b) => b.z - a.z);
+
+      renderables.forEach(item => {
+        if (item.kind === 'scenery') {
+          const pt = project(0, item.z, 0);
+          const w = canvas.width * 0.98 * pt.scale;
+          const h = 175 * pt.scale;
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+          ctx.lineWidth = 3.5 * pt.scale;
+          ctx.strokeRect(pt.x - w / 2, pt.y - h, w, h);
+        } else if (item.kind === 'coin') {
+          const pt = project(item.lane, item.z, item.y);
+          const r = Math.max(2, 13 * pt.scale);
+          ctx.fillStyle = "#ffd000";
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#ca8a04";
+          ctx.lineWidth = 2 * pt.scale;
+          ctx.stroke();
+        } else if (item.kind === 'key') {
+          const pt = project(item.lane, item.z, item.y);
+          const scale = pt.scale;
+          ctx.save();
+          ctx.translate(pt.x, pt.y);
+          ctx.scale(Math.cos(item.rot), 1);
+          ctx.fillStyle = "#00d4ff";
+          ctx.beginPath();
+          ctx.arc(0, -8 * scale, 8 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#020617";
+          ctx.beginPath();
+          ctx.arc(0, -8 * scale, 4 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#00d4ff";
+          ctx.fillRect(-2.5 * scale, 0, 5 * scale, 16 * scale);
+          ctx.fillRect(0, 8 * scale, 6 * scale, 3.5 * scale);
+          ctx.fillRect(0, 13 * scale, 6 * scale, 3.5 * scale);
+          ctx.restore();
+        } else if (item.kind === 'gift') {
+          const pt = project(item.lane, item.z, item.y);
+          const size = 26 * pt.scale;
+          ctx.fillStyle = "#ff0077";
+          ctx.fillRect(pt.x - size / 2, pt.y - size / 2, size, size);
+          ctx.fillStyle = "#ffd000";
+          ctx.fillRect(pt.x - 3 * pt.scale, pt.y - size / 2, 6 * pt.scale, size);
+          ctx.fillRect(pt.x - size / 2, pt.y - 3 * pt.scale, size, 6 * pt.scale);
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1.5 * pt.scale;
+          ctx.strokeRect(pt.x - size / 2, pt.y - size / 2, size, size);
+        } else if (item.kind === 'powerup') {
+          const pt = project(item.lane, item.z, 25);
+          const r = 16 * pt.scale;
+          const colors = { magnet: '#ef4444', jetpack: '#ff5e00', multiplier: '#c084fc', sneakers: '#ff0077', shield: '#00d4ff' };
+          ctx.fillStyle = colors[item.type] || '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `bold ${Math.max(8, 12 * pt.scale)}px 'Titan One', sans-serif`;
+          ctx.textAlign = "center";
+          ctx.fillText(item.type[0].toUpperCase(), pt.x, pt.y + 4 * pt.scale);
+        } else if (item.kind === 'obs') {
+          drawObstacle(item);
+        }
+      });
+
+      // Runner Figure
+      drawRunner();
+
+      // Particles & Popups
+      particles.forEach(p => {
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size || 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      popups.forEach(pop => {
+        ctx.globalAlpha = Math.max(0, pop.alpha);
+        ctx.fillStyle = pop.color;
+        ctx.font = "bold 16px 'Titan One', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(pop.text, pop.x, pop.y);
+      });
+
+      ctx.globalAlpha = 1.0;
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       8. UI & MENU LOGIC
+       ========================================================================== */
+    const uiScore = document.getElementById("ui-score");
+    const uiHigh = document.getElementById("ui-high");
+    const uiCoins = document.getElementById("ui-coins");
+    const uiKeys = document.getElementById("ui-keys");
+    const menuCoins = document.getElementById("menu-coins");
+    const menuKeys = document.getElementById("menu-keys");
+    const pContainer = document.getElementById("powerup-container");
+    const startMenu = document.getElementById("start-menu");
+    const gameOverMenu = document.getElementById("game-over-menu");
+    const goScore = document.getElementById("go-score");
+    const goCoins = document.getElementById("go-coins");
+    const goKeys = document.getElementById("go-keys");
+    const startBtn = document.getElementById("start-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const reviveBtn = document.getElementById("revive-btn");
+
+    function updateUI() {
+      if (uiScore) uiScore.innerText = score;
+      if (uiHigh) uiHigh.innerText = highScore;
+      if (uiCoins) uiCoins.innerText = coins;
+      if (uiKeys) uiKeys.innerText = keys;
+      if (menuCoins) menuCoins.innerText = coins;
+      if (menuKeys) menuKeys.innerText = keys;
+
+      if (pContainer) {
+        let tagsHTML = "";
+        if (powerups.magnet > 0) tagsHTML += `<div class="power-tag" style="background:#ef4444;">🧲 MAGNET (${Math.ceil(powerups.magnet)}s)</div>`;
+        if (powerups.jetpack > 0) tagsHTML += `<div class="power-tag" style="background:#ff5e00;">🚀 JETPACK (${Math.ceil(powerups.jetpack)}s)</div>`;
+        if (powerups.multiplier > 0) tagsHTML += `<div class="power-tag" style="background:#c084fc;">⚡ 2X SCORE (${Math.ceil(powerups.multiplier)}s)</div>`;
+        if (powerups.sneakers > 0) tagsHTML += `<div class="power-tag" style="background:#ff0077;">👟 SNEAKERS (${Math.ceil(powerups.sneakers)}s)</div>`;
+        if (powerups.shield > 0) tagsHTML += `<div class="power-tag" style="background:#00d4ff;">🛡️ SHIELD ACTIVE</div>`;
+        pContainer.innerHTML = tagsHTML;
+      }
+    }
+
+    function triggerCrash() {
+      isRunning = false;
+      screenShake = 1.0;
+      Sound.crash();
+
+      if (score > highScore) {
+        highScore = score;
+        try { localStorage.setItem('ss_high', highScore); } catch(e) {}
+      }
+      try { localStorage.setItem('ss_coins', coins); } catch(e) {}
+
+      const pPt = project(player.currentX, 0, player.y);
+      emitSparks(pPt.x, pPt.y, '#ef4444', 35);
+      render();
+
+      goScore.innerText = score;
+      goCoins.innerText = coins;
+      goKeys.innerText = keys;
+      reviveBtn.disabled = keys <= 0;
+      reviveBtn.innerText = `SAVE ME (1 🔑 - HAVE ${keys})`;
+      gameOverMenu.classList.remove("hidden");
+    }
+
+    function loop(currentTime) {
+      const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
+      lastTime = currentTime;
+
+      if (isRunning) update(dt);
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    function startGame() {
+      initAudio();
+      startMenu.classList.add("hidden");
+      gameOverMenu.classList.add("hidden");
+      resetGame(false);
+      lastTime = performance.now();
+      isRunning = true;
+    }
+
+    function reviveGame() {
+      if (keys <= 0) return;
+      keys--;
+      try { localStorage.setItem('ss_keys', keys); } catch(e) {}
+      gameOverMenu.classList.add("hidden");
+      resetGame(true);
+      lastTime = performance.now();
+      isRunning = true;
+    }
+
+    startBtn.addEventListener("click", startGame);
+    restartBtn.addEventListener("click", startGame);
+    reviveBtn.addEventListener("click", reviveGame);
+
+    updateUI();
+    render();
+    requestAnimationFrame((time) => {
+      lastTime = time;
+      loop(time);
+    });
+  </script>
+</body>
+</html>
